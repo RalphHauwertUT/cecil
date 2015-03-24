@@ -26,6 +26,8 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
+using System;
+
 namespace Mono.Cecil {
 
 	public abstract class MemberReference : IMetadataTokenProvider {
@@ -34,6 +36,8 @@ namespace Mono.Cecil {
 		TypeReference declaring_type;
 
 		internal MetadataToken token;
+
+		internal MemberReference _cachedResolve;
 
 		public virtual string Name {
 			get { return name; }

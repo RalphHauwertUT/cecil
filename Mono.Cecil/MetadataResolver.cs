@@ -111,6 +111,9 @@ namespace Mono.Cecil {
 			if (type == null)
 				throw new ArgumentNullException ("type");
 
+			if (type._cachedResolve != null)
+				return (TypeDefinition)type._cachedResolve;
+
 			type = type.GetElementType ();
 
 			var scope = type.Scope;
@@ -133,7 +136,7 @@ namespace Mono.Cecil {
 				for (int i = 0; i < modules.Count; i++) {
 					var netmodule = modules [i];
 					if (netmodule.Name == module_ref.Name)
-						return GetType (netmodule, type);
+						return (TypeDefinition)(type._cachedResolve = GetType(netmodule, type));
 				}
 				break;
 			}
@@ -183,6 +186,9 @@ namespace Mono.Cecil {
 			if (field == null)
 				throw new ArgumentNullException ("field");
 
+			if (field._cachedResolve != null)
+				return (FieldDefinition)field._cachedResolve;
+
 			var type = Resolve (field.DeclaringType);
 			if (type == null)
 				return null;
@@ -190,7 +196,7 @@ namespace Mono.Cecil {
 			if (!type.HasFields)
 				return null;
 
-			return GetField (type, field);
+			return (FieldDefinition)(field._cachedResolve = GetField(type, field));
 		}
 
 		FieldDefinition GetField (TypeDefinition type, FieldReference reference)
@@ -231,6 +237,9 @@ namespace Mono.Cecil {
 			if (method == null)
 				throw new ArgumentNullException ("method");
 
+			if (method._cachedResolve != null)
+				return (MethodDefinition)method._cachedResolve;
+
 			var type = Resolve (method.DeclaringType);
 			if (type == null)
 				return null;
@@ -240,7 +249,7 @@ namespace Mono.Cecil {
 			if (!type.HasMethods)
 				return null;
 
-			return GetMethod (type, method);
+			return (MethodDefinition)(method._cachedResolve = GetMethod(type, method));
 		}
 
 		MethodDefinition GetMethod (TypeDefinition type, MethodReference reference)
@@ -264,7 +273,10 @@ namespace Mono.Cecil {
 			for (int i = 0; i < methods.Count; i++) {
 				var method = methods [i];
 
-				if (method.Name != reference.Name)
+				if (method.HasParameters != reference.HasParameters)
+					continue;
+
+				if (method.Parameters.Count != reference.Parameters.Count)
 					continue;
 
 				if (method.HasGenericParameters != reference.HasGenericParameters)
@@ -273,10 +285,10 @@ namespace Mono.Cecil {
 				if (method.HasGenericParameters && method.GenericParameters.Count != reference.GenericParameters.Count)
 					continue;
 
-				if (!AreSame (method.ReturnType, reference.ReturnType))
+				if (method.Name != reference.Name)
 					continue;
 
-				if (method.HasParameters != reference.HasParameters)
+				if (!AreSame (method.ReturnType, reference.ReturnType))
 					continue;
 
 				if (!method.HasParameters && !reference.HasParameters)
